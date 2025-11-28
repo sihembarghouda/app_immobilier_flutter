@@ -304,7 +304,7 @@ class _ImprovedMapScreenState extends State<ImprovedMapScreen> {
                   TileLayer(
                     urlTemplate:
                         'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-                    userAgentPackageName: 'com.example.immobilier_app',
+                    userAgentPackageName: 'com.immobilier.app',
                   ),
                   // User location marker
                   if (locationProvider.hasLocation)
