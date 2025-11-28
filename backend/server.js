@@ -100,10 +100,10 @@ pool.query('SELECT NOW()', (err, result) => {
     console.log('✅ Database connected successfully');
   }
 
-  const server = app.listen(PORT, () => {
+  const server = app.listen(PORT, '0.0.0.0', () => {
     console.log(`🚀 Server is running on port ${PORT}`);
     console.log(`📝 Environment: ${process.env.NODE_ENV || 'development'}`);
-    console.log(`🌐 API Base URL: http://localhost:${PORT}/api`);
+    console.log(`🌐 API Base URL: http://0.0.0.0:${PORT}/api`);
     
     // Initialize WebSocket after server starts
     const websocketService = require('./src/services/websocket.service');

@@ -109,10 +109,12 @@ class ApiService {
 
   Future<User> getCurrentUser() async {
     try {
-      final response = await http.get(
-        Uri.parse('$baseUrl/auth/me'),
-        headers: await _getHeaders(),
-      );
+      final response = await http
+          .get(
+            Uri.parse('$baseUrl/auth/me'),
+            headers: await _getHeaders(),
+          )
+          .timeout(const Duration(seconds: 60));
 
       if (response.statusCode == 200) {
         return User.fromJson(json.decode(response.body));
@@ -174,7 +176,9 @@ class ApiService {
       final uri = Uri.parse('$baseUrl${AppConstants.propertiesEndpoint}')
           .replace(queryParameters: queryParams);
 
-      final response = await http.get(uri, headers: await _getHeaders());
+      final response = await http
+          .get(uri, headers: await _getHeaders())
+          .timeout(const Duration(seconds: 60));
 
       if (response.statusCode == 200) {
         final responseData = json.decode(response.body);
@@ -190,10 +194,12 @@ class ApiService {
 
   Future<Property> getPropertyById(String id) async {
     try {
-      final response = await http.get(
-        Uri.parse('$baseUrl${AppConstants.propertiesEndpoint}/$id'),
-        headers: await _getHeaders(),
-      );
+      final response = await http
+          .get(
+            Uri.parse('$baseUrl${AppConstants.propertiesEndpoint}/$id'),
+            headers: await _getHeaders(),
+          )
+          .timeout(const Duration(seconds: 60));
 
       if (response.statusCode == 200) {
         final responseData = json.decode(response.body);
@@ -215,12 +221,23 @@ class ApiService {
       );
 
       if (response.statusCode == 201 || response.statusCode == 200) {
+        // Log response body for debugging null/malformed fields
+        print('📦 createProperty response body: ${response.body}');
         final responseData = json.decode(response.body);
-        return Property.fromJson(responseData['data'] ?? responseData);
+        try {
+          return Property.fromJson(responseData['data'] ?? responseData);
+        } catch (e) {
+          print('❌ createProperty parse error: $e');
+          throw Exception(
+              'Create property parse error: $e | body: ${response.body}');
+        }
       } else {
-        throw Exception('Failed to create property');
+        final errorBody = response.body;
+        print('❌ createProperty failed (${response.statusCode}): $errorBody');
+        throw Exception('Failed to create property: ${response.statusCode}');
       }
     } catch (e) {
+      print('❌ Create property error: $e');
       throw Exception('Create property error: $e');
     }
   }
@@ -260,10 +277,12 @@ class ApiService {
 
   Future<List<Property>> getFavorites() async {
     try {
-      final response = await http.get(
-        Uri.parse('$baseUrl${AppConstants.favoritesEndpoint}'),
-        headers: await _getHeaders(),
-      );
+      final response = await http
+          .get(
+            Uri.parse('$baseUrl${AppConstants.favoritesEndpoint}'),
+            headers: await _getHeaders(),
+          )
+          .timeout(const Duration(seconds: 60));
 
       if (response.statusCode == 200) {
         final responseData = json.decode(response.body);
@@ -440,10 +459,12 @@ class ApiService {
 
   Future<List<dynamic>> getConversations() async {
     try {
-      final response = await http.get(
-        Uri.parse('$baseUrl${AppConstants.messagesEndpoint}/conversations'),
-        headers: await _getHeaders(),
-      );
+      final response = await http
+          .get(
+            Uri.parse('$baseUrl${AppConstants.messagesEndpoint}/conversations'),
+            headers: await _getHeaders(),
+          )
+          .timeout(const Duration(seconds: 60));
 
       if (response.statusCode == 200) {
         final responseData = json.decode(response.body);
@@ -458,10 +479,12 @@ class ApiService {
 
   Future<List<dynamic>> getMessages(String userId) async {
     try {
-      final response = await http.get(
-        Uri.parse('$baseUrl${AppConstants.messagesEndpoint}/$userId'),
-        headers: await _getHeaders(),
-      );
+      final response = await http
+          .get(
+            Uri.parse('$baseUrl${AppConstants.messagesEndpoint}/$userId'),
+            headers: await _getHeaders(),
+          )
+          .timeout(const Duration(seconds: 60));
 
       if (response.statusCode == 200) {
         final responseData = json.decode(response.body);

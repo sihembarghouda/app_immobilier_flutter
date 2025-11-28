@@ -15,7 +15,9 @@ class _MyPropertiesScreenState extends State<MyPropertiesScreen> {
   @override
   void initState() {
     super.initState();
-    _loadProperties();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _loadProperties();
+    });
   }
 
   Future<void> _loadProperties() async {
