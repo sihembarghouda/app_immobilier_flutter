@@ -44,8 +44,12 @@ android {
                 storeFile = file(keystoreProperties["storeFile"] as String)
                 storePassword = keystoreProperties["storePassword"] as String
             } else {
-                // For development builds without signing
-                println("Warning: key.properties not found. Using debug signing for release build.")
+                // For development builds without signing - use debug keystore
+                storeFile = file("${System.getProperty("user.home")}/.android/debug.keystore")
+                storePassword = "android"
+                keyAlias = "androiddebugkey"
+                keyPassword = "android"
+                println("Warning: key.properties not found. Using debug keystore for release build.")
             }
         }
     }
