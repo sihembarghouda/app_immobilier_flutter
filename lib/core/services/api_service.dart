@@ -233,10 +233,11 @@ class ApiService {
       print('🏠 Get properties from: $uri');
 
       final headers = await _getHeaders();
+      print(headers);
       final response = await http
           .get(uri, headers: headers)
           .timeout(AppConfig.requestTimeout);
-
+      print('Got here');
       final data = _handleResponse(response, 'getProperties');
       final List<dynamic> propertiesList = data['data'] ?? [];
       return propertiesList.map((json) => Property.fromJson(json)).toList();

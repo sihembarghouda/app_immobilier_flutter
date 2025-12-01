@@ -10,7 +10,7 @@ class AppConfig {
   /// Trouver votre IP:
   /// - Windows: ipconfig (chercher "IPv4 Address")
   /// - macOS/Linux: ifconfig ou ip addr
-  static const String _lanIp = '192.168.12.254'; // 🔧 CONFIGUREZ ICI VOTRE IP
+  static const String _lanIp = '192.168.1.14'; // 🔧 CONFIGUREZ ICI VOTRE IP
 
   /// Port du backend
   static const int _backendPort = 3000;
@@ -19,17 +19,26 @@ class AppConfig {
   static String get baseUrl {
     if (kIsWeb) {
       // Web: localhost ou IP LAN selon CONFIG_WEB_USE_LAN
-      return const bool.fromEnvironment('CONFIG_WEB_USE_LAN',
-              defaultValue: false)
+      return const bool.fromEnvironment(
+        'CONFIG_WEB_USE_LAN',
+        defaultValue: false,
+      )
           ? 'http://$_lanIp:$_backendPort/api'
           : 'http://localhost:$_backendPort/api';
     } else if (Platform.isAndroid) {
-      // Android réel avec ADB reverse: utiliser localhost (127.0.0.1)
-      return 'http://127.0.0.1:$_backendPort/api';
+      // Android: 10.0.2.2 pour émulateur, IP LAN pour appareil réel
+      return const bool.fromEnvironment(
+        'CONFIG_ANDROID_REAL_DEVICE',
+        defaultValue: false,
+      )
+          ? 'http://$_lanIp:$_backendPort/api'
+          : 'http://192.168.1.14:$_backendPort/api';
     } else if (Platform.isIOS) {
       // iOS: localhost pour simulateur, IP LAN pour appareil réel
-      return const bool.fromEnvironment('CONFIG_IOS_REAL_DEVICE',
-              defaultValue: false)
+      return const bool.fromEnvironment(
+        'CONFIG_IOS_REAL_DEVICE',
+        defaultValue: false,
+      )
           ? 'http://$_lanIp:$_backendPort/api'
           : 'http://localhost:$_backendPort/api';
     } else if (Platform.isWindows || Platform.isLinux || Platform.isMacOS) {
@@ -39,6 +48,16 @@ class AppConfig {
 
     // Fallback
     return 'http://localhost:$_backendPort/api';
+  }
+
+  /// Build a full media URL for a path returned by the backend.
+  /// If [path] is already an absolute URL (starts with http), returns it unchanged.
+  /// Otherwise it prefixes the API host root (without the `/api` segment).
+  static String mediaUrl(String path) {
+    if (path.isEmpty) return path;
+    if (path.startsWith('http')) return path;
+    final root = baseUrl.replaceFirst('/api', '');
+    return '$root$path';
   }
 
   /// Endpoints de l'API
@@ -68,7 +87,7 @@ class AppConfig {
   static const int maxImageHeight = 1024;
 
   /// Timeout des requêtes
-  static const Duration requestTimeout = Duration(seconds: 30);
+  static const Duration requestTimeout = Duration(seconds: 180);
 
   /// Types de propriétés
   static const List<String> propertyTypes = [
@@ -79,8 +98,5 @@ class AppConfig {
   ];
 
   /// Types de transaction
-  static const List<String> transactionTypes = [
-    'sale',
-    'rent',
-  ];
+  static const List<String> transactionTypes = ['sale', 'rent'];
 }

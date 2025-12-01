@@ -2,7 +2,7 @@
 class AppConstants {
   // API Configuration
   static const String apiBaseUrl =
-      'http://192.168.12.254:3000/api'; // Backend local pour tests
+      'http://192.168.1.14:3000/api'; // Backend local pour tests
 
   // Endpoints
   static const String loginEndpoint = '/auth/login';
@@ -24,8 +24,5 @@ class AppConstants {
   ];
 
   // Transaction Types
-  static const List<String> transactionTypes = [
-    'sale',
-    'rent',
-  ];
+  static const List<String> transactionTypes = ['sale', 'rent'];
 }

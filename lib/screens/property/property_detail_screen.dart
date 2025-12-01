@@ -6,6 +6,7 @@ import 'package:intl/intl.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../providers/property_provider.dart';
 import '../../providers/location_provider.dart';
+import '../../core/config/app_config.dart';
 import '../../utils/translations.dart';
 
 class PropertyDetailScreen extends StatefulWidget {
@@ -110,7 +111,7 @@ class _PropertyDetailScreenState extends State<PropertyDetailScreen> {
                       },
                       itemBuilder: (context, index) {
                         return CachedNetworkImage(
-                          imageUrl: property.images[index],
+                          imageUrl: AppConfig.mediaUrl(property.images[index]),
                           fit: BoxFit.cover,
                           placeholder: (context, url) => Container(
                             color: Colors.grey[300],

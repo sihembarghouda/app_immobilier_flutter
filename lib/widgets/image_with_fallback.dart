@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import '../utils/image_url_helper.dart';
 
 /// Widget pour afficher une image avec fallback en cas d'erreur
 class ImageWithFallback extends StatelessWidget {
@@ -33,13 +32,10 @@ class ImageWithFallback extends StatelessWidget {
       return _buildFallback();
     }
 
-    // Convertir l'URL en URL complète
-    final fullImageUrl = ImageUrlHelper.getFullImageUrl(imageUrl);
-
     return ClipRRect(
       borderRadius: borderRadius ?? BorderRadius.zero,
       child: Image.network(
-        fullImageUrl,
+        imageUrl!,
         width: width,
         height: height,
         fit: fit,
@@ -129,13 +125,10 @@ class AvatarWithFallback extends StatelessWidget {
       );
     }
 
-    // Convertir l'URL en URL complète
-    final fullImageUrl = ImageUrlHelper.getFullImageUrl(imageUrl);
-
     return CircleAvatar(
       radius: radius,
       backgroundColor: Colors.grey[200],
-      backgroundImage: NetworkImage(fullImageUrl),
+      backgroundImage: NetworkImage(imageUrl!),
       onBackgroundImageError: (error, stackTrace) {
         print('❌ Avatar loading error: $error');
       },

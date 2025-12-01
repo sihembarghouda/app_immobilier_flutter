@@ -47,6 +47,11 @@ app.use(compression()); // Compress responses
 app.use(express.json({ limit: '50mb' })); // Parse JSON bodies with 50MB limit
 app.use(express.urlencoded({ extended: true, limit: '50mb' })); // Parse URL-encoded bodies
 
+app.use((req, res, next) => {
+  console.log(`${req.method} ${req.url}`);
+  next();
+});
+
 // Serve static files (uploaded images)
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
@@ -103,7 +108,7 @@ pool.query('SELECT NOW()', (err, result) => {
   const server = app.listen(PORT, '0.0.0.0', () => {
     console.log(`🚀 Server is running on port ${PORT}`);
     console.log(`📝 Environment: ${process.env.NODE_ENV || 'development'}`);
-    console.log(`🌐 API Base URL: http://0.0.0.0:${PORT}/api`);
+    console.log(`🌐 API Base URL: http://localhost:${PORT}/api`);
     
     // Initialize WebSocket after server starts
     const websocketService = require('./src/services/websocket.service');

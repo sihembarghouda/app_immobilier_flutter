@@ -44,27 +44,75 @@ class Property {
   });
 
   factory Property.fromJson(Map<String, dynamic> json) {
+    // Defensive parsing: provide sensible defaults when fields are missing/null
+    String parseString(dynamic v) {
+      if (v == null) return '';
+      return v.toString();
+    }
+
+    double parseDouble(dynamic v) {
+      try {
+        if (v == null) return 0.0;
+        return double.parse(v.toString());
+      } catch (_) {
+        return 0.0;
+      }
+    }
+
+    int parseInt(dynamic v) {
+      try {
+        if (v == null) return 0;
+        return int.parse(v.toString());
+      } catch (_) {
+        // fallback for non-int numeric values
+        try {
+          return (double.parse(v.toString())).toInt();
+        } catch (_) {
+          return 0;
+        }
+      }
+    }
+
+    DateTime parseDate(dynamic v) {
+      if (v == null) return DateTime.now();
+      try {
+        return DateTime.parse(v.toString());
+      } catch (_) {
+        return DateTime.now();
+      }
+    }
+
+    final imgs = <String>[];
+    try {
+      if (json['images'] is List) {
+        imgs.addAll(List<String>.from(
+            json['images'].where((e) => e != null).map((e) => e.toString())));
+      }
+    } catch (_) {}
+
     return Property(
-      id: json['id'].toString(),
-      title: json['title'],
-      description: json['description'],
-      type: json['type'],
-      transactionType: json['transaction_type'],
-      price: double.parse(json['price'].toString()),
-      surface: double.parse(json['surface'].toString()),
-      rooms: json['rooms'],
-      bedrooms: json['bedrooms'],
-      bathrooms: json['bathrooms'],
-      address: json['address'],
-      city: json['city'],
-      latitude: double.parse(json['latitude'].toString()),
-      longitude: double.parse(json['longitude'].toString()),
-      images: List<String>.from(json['images'] ?? []),
-      ownerId: json['owner_id'].toString(),
-      ownerName: json['owner_name'],
-      ownerPhone: json['owner_phone'],
-      isFavorite: json['is_favorite'] ?? false,
-      createdAt: DateTime.parse(json['created_at']),
+      id: parseString(json['id']),
+      title: parseString(json['title']),
+      description: parseString(json['description']),
+      type: parseString(json['type']),
+      transactionType: parseString(json['transaction_type']),
+      price: parseDouble(json['price']),
+      surface: parseDouble(json['surface']),
+      rooms: parseInt(json['rooms']),
+      bedrooms: parseInt(json['bedrooms']),
+      bathrooms: parseInt(json['bathrooms']),
+      address: parseString(json['address']),
+      city: parseString(json['city']),
+      latitude: parseDouble(json['latitude']),
+      longitude: parseDouble(json['longitude']),
+      images: imgs,
+      ownerId: parseString(json['owner_id']),
+      ownerName: parseString(json['owner_name']),
+      ownerPhone:
+          json['owner_phone'] == null ? null : parseString(json['owner_phone']),
+      isFavorite:
+          json['is_favorite'] == null ? false : (json['is_favorite'] == true),
+      createdAt: parseDate(json['created_at']),
     );
   }
 

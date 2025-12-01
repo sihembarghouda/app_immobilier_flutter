@@ -2,16 +2,27 @@
 const { Pool } = require('pg');
 require('dotenv').config(); // <-- à garder tout en haut
 
-const pool = new Pool({
-  host: process.env.DB_HOST || 'localhost',
-  port: parseInt(process.env.DB_PORT || '5432', 10),
-  database: process.env.DB_NAME || 'immobilier_db',
-  user: process.env.DB_USER || 'postgres',
-  password: process.env.DB_PASSWORD || '0000',
-  max: 20,
-  idleTimeoutMillis: 30000,
-  connectionTimeoutMillis: 2000,
-});
+// Support Render.com DATABASE_URL or individual env vars
+const pool = process.env.DATABASE_URL
+  ? new Pool({
+      connectionString: process.env.DATABASE_URL,
+      ssl: {
+        rejectUnauthorized: false, // Nécessaire pour Render
+      },
+      max: 20,
+      idleTimeoutMillis: 180000,
+      connectionTimeoutMillis: 180000,
+    })
+  : new Pool({
+      host: process.env.DB_HOST || 'localhost',
+      port: parseInt(process.env.DB_PORT || '5432', 10),
+      database: process.env.DB_NAME || 'immobilier_db',
+      user: process.env.DB_USER || 'postgres',
+      password: process.env.DB_PASSWORD || '0000',
+      max: 20,
+      idleTimeoutMillis: 180000,
+      connectionTimeoutMillis: 180000,
+    });
 
 pool.on('connect', () => {
   console.log('✅ Connected to PostgreSQL successfully');
@@ -131,5 +142,5 @@ INSERT INTO users (email, password, name, phone) VALUES
 INSERT INTO properties (title, description, type, transaction_type, price, surface, rooms, bedrooms, bathrooms, address, city, latitude, longitude, images, owner_id) VALUES
 ('Appartement moderne avec vue mer', 'Belle appartement de 120m² avec vue imprenable sur la mer. Cuisine équipée, climatisation, parking.', 'apartment', 'sale', 250000.00, 120.00, 4, 3, 2, 'Avenue Habib Bourguiba', 'Tunis', 36.8065, 10.1815, ARRAY['https://images.unsplash.com/photo-1522708323590-d24dbb6b0267'], 2),
 ('Villa luxueuse avec piscine', 'Magnifique villa de 350m² avec jardin et piscine. 5 chambres, garage double.', 'villa', 'sale', 850000.00, 350.00, 7, 5, 3, 'Les Berges du Lac', 'Tunis', 36.8358, 10.2578, ARRAY['https://images.unsplash.com/photo-1613490493576-7fde63acd811'], 3),
-('Studio meublé centre ville', 'Studio de 45m² entièrement meublé, idéal pour étudiant ou jeune professionnel.', 'studio', 'rent', 800.00, 45.00, 1, 1, 1, 'Rue de Marseille', 'Tunis', 36.8019, 10.1868, ARRAY['https://images.unsplash.com/photo-1502672260066-6bc35f0c99f0'], 1);
+('Studio meublé centre ville', 'Studio de 45m² entièrement meublé, idéal pour étudiant ou jeune professionnel.', 'studio', 'rent', 800.00, 45.00, 1, 1, 1, 'Rue de Marseille', 'Tunis', 36.8019, 10.1868, ARRAY['https://images.unsplash.com/photo-1522708323590-d24dbb6b0267'], 1);
 */

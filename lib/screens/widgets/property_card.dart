@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../../models/property.dart';
+import '../../core/config/app_config.dart';
 import 'package:intl/intl.dart';
 import '../../../widgets/role_protected_widget.dart';
 
@@ -67,7 +68,7 @@ class PropertyCard extends StatelessWidget {
               children: [
                 CachedNetworkImage(
                   imageUrl: property.images.isNotEmpty
-                      ? property.images.first
+                      ? AppConfig.mediaUrl(property.images.first)
                       : '', // Empty string triggers errorWidget
                   height: 200,
                   width: double.infinity,

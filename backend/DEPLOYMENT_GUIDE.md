@@ -81,7 +81,6 @@ Une fois le backend démarré, mettez à jour l'URL dans l'application Flutter:
 ```dart
 // Pour un serveur local sur le même réseau
 static const String apiBaseUrl = 'http://VOTRE_IP_LOCAL:3000/api';
-// Exemple: 'http://192.168.1.100:3000/api'
 
 // Pour un serveur déployé en production
 static const String apiBaseUrl = 'https://votre-domaine.com/api';

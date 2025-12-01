@@ -121,8 +121,9 @@ class _AddPropertyScreenState extends State<AddPropertyScreen> {
                     'data:image/jpeg;base64,${base64Encode(bytes)}';
                 imageUrl = await _apiService.uploadImage(base64Image);
               } else {
-                // For mobile, use file path
-                imageUrl = await _apiService.uploadImage(image.path);
+                // For mobile, read bytes and upload bytes to handle content:// URIs
+                final bytes = await image.readAsBytes();
+                imageUrl = await _apiService.uploadImage(bytes);
               }
 
               imageUrls.add(imageUrl);
