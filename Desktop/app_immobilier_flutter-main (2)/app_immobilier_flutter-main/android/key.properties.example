@@ -1,0 +1,4 @@
+storePassword=VOTRE_MOT_DE_PASSE_ICI
+keyPassword=VOTRE_MOT_DE_PASSE_ICI
+keyAlias=immobilier_app_key
+storeFile=immobilier_app_secure.jks
