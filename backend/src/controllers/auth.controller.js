@@ -214,13 +214,13 @@ exports.updateProfile = async (req, res) => {
           message: "Rôle invalide. Valeurs acceptées: visitor/buyer/seller ou visiteur/acheteur/vendeur"
         });
       }
-      // Normalize EN -> FR for DB compatibility
-      const enToFrMap = {
-        'visitor': 'visiteur',
-        'buyer': 'acheteur',
-        'seller': 'vendeur'
+      // Normalize FR -> EN for DB compatibility (DB expects English values)
+      const frToEnMap = {
+        'visiteur': 'visitor',
+        'acheteur': 'buyer',
+        'vendeur': 'seller'
       };
-      roleToUpdate = enToFrMap[input] || input; // if FR already, keep as-is
+      roleToUpdate = frToEnMap[input] || input; // if EN already, keep as-is
     }
 
     // Load current values to avoid NULL update issues
