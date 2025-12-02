@@ -18,14 +18,22 @@ exports.register = async (req, res) => {
   try {
     const { email, password, name, phone, role } = req.body;
 
-    // Normaliser le rôle (convertir 'visitor' → 'visiteur' pour compatibilité)
-    let normalizedRole = role || 'visiteur';
-    if (normalizedRole === 'visitor') {
-      normalizedRole = 'visiteur';
-    } else if (normalizedRole === 'buyer') {
-      normalizedRole = 'acheteur';
-    } else if (normalizedRole === 'seller') {
-      normalizedRole = 'vendeur';
+    // Normalize role to English values expected by the DB: 'visitor', 'buyer', 'seller'
+    // Accept French or English inputs and convert to DB-friendly English values.
+    let normalizedRole = 'visitor';
+    if (typeof role === 'string' && role.trim()) {
+      const r = role.trim().toLowerCase();
+      const map = {
+        // English -> English
+        visitor: 'visitor',
+        buyer: 'buyer',
+        seller: 'seller',
+        // French -> English
+        visiteur: 'visitor',
+        acheteur: 'buyer',
+        vendeur: 'seller'
+      };
+      normalizedRole = map[r] || 'visitor';
     }
 
     // Check if user already exists
