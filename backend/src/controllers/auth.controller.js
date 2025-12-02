@@ -258,7 +258,8 @@ exports.updateProfile = async (req, res) => {
     console.error('Update profile error:', error);
     res.status(500).json({
       success: false,
-      message: 'Erreur lors de la mise à jour du profil'
+      message: 'Erreur lors de la mise à jour du profil',
+      error: error.message // Add detailed error message for debugging
     });
   } finally {
     client.release();
