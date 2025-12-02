@@ -2,6 +2,7 @@
 const pool = require('../config/database');
 const fs = require('fs');
 const path = require('path');
+const cloudinaryService = require('../services/cloudinary.service');
 
 // Upload web (generic multipart: field name 'image')
 exports.uploadWeb = async (req, res) => {
@@ -13,23 +14,26 @@ exports.uploadWeb = async (req, res) => {
       });
     }
 
-    // Determine actual relative path under /uploads
-    const uploadsRoot = path.resolve(__dirname, '../../uploads');
-    const absolute = path.resolve(req.file.path);
-    let rel = path.relative(uploadsRoot, absolute).replace(/\\/g, '/');
-    if (!rel || rel.startsWith('..')) {
-      // Fallback to profiles
-      rel = `profiles/${req.file.filename}`;
+    // Upload to Cloudinary
+    const cloudinaryUrl = await cloudinaryService.uploadImage(
+      req.file.path,
+      'immobilier/properties'
+    );
+
+    // Delete local file after upload
+    try {
+      fs.unlinkSync(req.file.path);
+    } catch (err) {
+      console.error('Error deleting local file:', err);
     }
-    const imagePath = `/uploads/${rel}`;
-    const absoluteUrl = `${req.protocol}://${req.get('host')}${imagePath}`;
 
     res.status(200).json({
       success: true,
       message: 'Image uploadée avec succès',
-      imageUrl: absoluteUrl,
-      imagePath,
-      filename: req.file.filename
+      imageUrl: cloudinaryUrl,
+      data: {
+        url: cloudinaryUrl
+      }
     });
   } catch (error) {
     console.error('Error uploading web image:', error);
@@ -58,10 +62,21 @@ exports.uploadProfileImage = async (req, res) => {
     }
 
     const userId = req.user.id;
-    const imagePath = `/uploads/profiles/${req.file.filename}`;
-    const absoluteUrl = `${req.protocol}://${req.get('host')}${imagePath}`;
 
-    // Get old image to delete it
+    // Upload to Cloudinary
+    const cloudinaryUrl = await cloudinaryService.uploadImage(
+      req.file.path,
+      'immobilier/profiles'
+    );
+
+    // Delete local file after upload
+    try {
+      fs.unlinkSync(req.file.path);
+    } catch (err) {
+      console.error('Error deleting local file:', err);
+    }
+
+    // Get old image to delete it from Cloudinary
     const oldImageResult = await client.query(
       'SELECT avatar FROM users WHERE id = $1',
       [userId]
@@ -70,38 +85,39 @@ exports.uploadProfileImage = async (req, res) => {
     // Update user profile image
     await client.query(
       'UPDATE users SET avatar = $1 WHERE id = $2',
-      [absoluteUrl, userId]
+      [cloudinaryUrl, userId]
     );
 
-    // Delete old image if exists
+    // Delete old image from Cloudinary if exists
     if (oldImageResult.rows[0]?.avatar) {
-      let oldImagePathStr = oldImageResult.rows[0].avatar;
-      try {
-        // If absolute URL stored previously, extract pathname
-        if (typeof oldImagePathStr === 'string' && oldImagePathStr.startsWith('http')) {
-          oldImagePathStr = new URL(oldImagePathStr).pathname;
+      const oldUrl = oldImageResult.rows[0].avatar;
+      if (oldUrl && oldUrl.includes('cloudinary.com')) {
+        try {
+          const publicId = cloudinaryService.extractPublicId(oldUrl);
+          if (publicId) {
+            await cloudinaryService.deleteImage(publicId);
+          }
+        } catch (err) {
+          console.error('Error deleting old image from Cloudinary:', err);
         }
-      } catch (_) {}
-      const oldImagePath = path.join(__dirname, '../../', oldImagePathStr);
-      if (fs.existsSync(oldImagePath)) {
-        fs.unlinkSync(oldImagePath);
       }
     }
 
     res.json({
       message: 'Photo de profil mise à jour avec succès',
-      imageUrl: absoluteUrl,
-      imagePath
+      imageUrl: cloudinaryUrl,
+      data: {
+        url: cloudinaryUrl
+      }
     });
   } catch (error) {
     console.error('Error uploading profile image:', error);
     
     // Delete uploaded file on error
     if (req.file) {
-      const filePath = path.join(__dirname, '../../uploads/profiles', req.file.filename);
-      if (fs.existsSync(filePath)) {
-        fs.unlinkSync(filePath);
-      }
+      try {
+        fs.unlinkSync(req.file.path);
+      } catch (_) {}
     }
     
     res.status(500).json({ error: 'Erreur lors du téléchargement de l\'image' });
