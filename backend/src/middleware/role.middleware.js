@@ -1,9 +1,10 @@
 // src/middleware/role.middleware.js
 // Middleware pour vérifier les rôles utilisateur
+const pool = require('../config/database');
 
 /**
  * Vérifie si l'utilisateur a le rôle requis
- * @param {string|string[]} allowedRoles - Rôle(s) autorisé(s) ('visiteur', 'acheteur', 'vendeur')
+ * @param {string|string[]} allowedRoles - Rôle(s) autorisé(s) ('visitor', 'buyer', 'seller')
  */
 const checkRole = (allowedRoles) => {
   return async (req, res, next) => {
@@ -17,15 +18,6 @@ const checkRole = (allowedRoles) => {
       }
 
       // Récupérer le rôle de l'utilisateur depuis la base de données
-      const { Pool } = require('pg');
-      const pool = new Pool({
-        host: process.env.DB_HOST || 'localhost',
-        port: process.env.DB_PORT || 5432,
-        user: process.env.DB_USER || 'postgres',
-        password: process.env.DB_PASSWORD,
-        database: process.env.DB_NAME || 'immobilier_db'
-      });
-
       const client = await pool.connect();
       
       try {
@@ -59,7 +51,6 @@ const checkRole = (allowedRoles) => {
         next();
       } finally {
         client.release();
-        await pool.end();
       }
     } catch (error) {
       console.error('Role middleware error:', error);
@@ -102,15 +93,6 @@ const canEditProperty = async (req, res, next) => {
       });
     }
 
-    const { Pool } = require('pg');
-    const pool = new Pool({
-      host: process.env.DB_HOST || 'localhost',
-      port: process.env.DB_PORT || 5432,
-      user: process.env.DB_USER || 'postgres',
-      password: process.env.DB_PASSWORD,
-      database: process.env.DB_NAME || 'immobilier_db'
-    });
-
     const client = await pool.connect();
     
     try {
@@ -138,7 +120,6 @@ const canEditProperty = async (req, res, next) => {
       next();
     } finally {
       client.release();
-      await pool.end();
     }
   } catch (error) {
     console.error('Can edit property error:', error);
