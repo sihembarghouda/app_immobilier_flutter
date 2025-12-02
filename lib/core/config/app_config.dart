@@ -6,19 +6,26 @@ class AppConfig {
   // Empêcher l'instanciation
   AppConfig._();
 
-  /// IP LAN de votre machine pour tester sur appareil réel
-  /// Trouver votre IP:
-  /// - Windows: ipconfig (chercher "IPv4 Address")
-  /// - macOS/Linux: ifconfig ou ip addr
-  static const String _lanIp = '192.168.1.14'; // 🔧 CONFIGUREZ ICI VOTRE IP
+  /// URL du backend en production (Render.com)
+  static const String _productionUrl =
+      'https://immobilier-backend.onrender.com/api';
 
-  /// Port du backend
+  /// IP LAN de votre machine pour tester en développement local
+  static const String _lanIp = '192.168.1.14';
   static const int _backendPort = 3000;
 
-  /// URL de base de l'API selon la plateforme
+  /// Mode de déploiement - Changer à false pour tests locaux
+  static const bool _useProduction = true;
+
+  /// URL de base de l'API
   static String get baseUrl {
+    // En production, utiliser l'URL Render pour toutes les plateformes
+    if (_useProduction) {
+      return _productionUrl;
+    }
+
+    // En développement, utiliser localhost/IP LAN
     if (kIsWeb) {
-      // Web: localhost ou IP LAN selon CONFIG_WEB_USE_LAN
       return const bool.fromEnvironment(
         'CONFIG_WEB_USE_LAN',
         defaultValue: false,
@@ -26,7 +33,6 @@ class AppConfig {
           ? 'http://$_lanIp:$_backendPort/api'
           : 'http://localhost:$_backendPort/api';
     } else if (Platform.isAndroid) {
-      // Android: 10.0.2.2 pour émulateur, IP LAN pour appareil réel
       return const bool.fromEnvironment(
         'CONFIG_ANDROID_REAL_DEVICE',
         defaultValue: false,
@@ -34,7 +40,6 @@ class AppConfig {
           ? 'http://$_lanIp:$_backendPort/api'
           : 'http://192.168.1.14:$_backendPort/api';
     } else if (Platform.isIOS) {
-      // iOS: localhost pour simulateur, IP LAN pour appareil réel
       return const bool.fromEnvironment(
         'CONFIG_IOS_REAL_DEVICE',
         defaultValue: false,
@@ -42,11 +47,9 @@ class AppConfig {
           ? 'http://$_lanIp:$_backendPort/api'
           : 'http://localhost:$_backendPort/api';
     } else if (Platform.isWindows || Platform.isLinux || Platform.isMacOS) {
-      // Desktop: localhost
       return 'http://localhost:$_backendPort/api';
     }
 
-    // Fallback
     return 'http://localhost:$_backendPort/api';
   }
 

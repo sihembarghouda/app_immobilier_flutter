@@ -5,7 +5,7 @@
   "packages": [
     {
       "name": "immobilier_app",
-      "version": "1.0.0+3",
+      "version": "1.0.0+4",
       "dependencies": [
         "animated_text_kit",
         "cached_network_image",
