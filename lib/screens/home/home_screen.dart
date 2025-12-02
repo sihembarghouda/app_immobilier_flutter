@@ -442,7 +442,6 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         ],
       ),
-      floatingActionButton: _buildFloatingActionButton(context),
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _selectedIndex,
         onTap: _onItemTapped,
@@ -482,40 +481,6 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         ],
       ),
-    );
-  }
-
-  /// Construit le FloatingActionButton selon le rôle de l'utilisateur
-  Widget? _buildFloatingActionButton(BuildContext context) {
-    final authProvider = Provider.of<AuthProvider>(context, listen: false);
-    final userRole = authProvider.user?.role;
-
-    // Si vendeur: Bouton pour créer une propriété
-    if (UserRole.canCreateProperty(userRole)) {
-      return FloatingActionButton.extended(
-        onPressed: () {
-          Navigator.of(context).pushNamed('/create-property');
-        },
-        backgroundColor: Theme.of(context).colorScheme.primary,
-        icon: const Icon(Icons.add_home),
-        label: const Text('Ajouter'),
-        heroTag: 'create_property',
-      );
-    }
-
-    // Pour tous: Assistant IA
-    return FloatingActionButton.extended(
-      onPressed: () {
-        Navigator.of(context).pushNamed('/chat', arguments: {
-          'userId': 'ai_chatbot_assistant',
-          'userName': 'Assistant IA',
-          'userAvatar': null,
-        });
-      },
-      backgroundColor: Theme.of(context).colorScheme.secondary,
-      icon: const Icon(Icons.smart_toy),
-      label: const Text('Assistant IA'),
-      heroTag: 'ai_assistant',
     );
   }
 }

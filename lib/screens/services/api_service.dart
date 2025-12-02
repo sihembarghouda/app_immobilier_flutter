@@ -7,6 +7,7 @@ import '../utils/constants.dart';
 import '../../models/property.dart';
 import '../../models/user.dart';
 import '../../core/services/token_service.dart';
+import '../../core/config/app_config.dart';
 
 class ApiService {
   // Singleton pattern
@@ -14,7 +15,7 @@ class ApiService {
   factory ApiService() => _instance;
   ApiService._internal();
 
-  final String baseUrl = AppConstants.apiBaseUrl;
+  final String baseUrl = AppConfig.baseUrl;
   String? _token;
 
   // Set authentication token
@@ -340,9 +341,27 @@ class ApiService {
         request.headers['Authorization'] = headers['Authorization']!;
       }
 
-      // Attach file from path
-      request.files.add(await http.MultipartFile.fromPath('image', imagePath));
+      // Determine content type from extension
+      String contentTypeStr = 'image/jpeg';
+      if (imagePath.toLowerCase().endsWith('.png')) {
+        contentTypeStr = 'image/png';
+      } else if (imagePath.toLowerCase().endsWith('.gif')) {
+        contentTypeStr = 'image/gif';
+      } else if (imagePath.toLowerCase().endsWith('.webp')) {
+        contentTypeStr = 'image/webp';
+      }
 
+      // Attach file from path with explicit content type
+      print('📱 Adding file with content type: $contentTypeStr');
+      request.files.add(
+        await http.MultipartFile.fromPath(
+          'image',
+          imagePath,
+          contentType: MediaType.parse(contentTypeStr),
+        ),
+      );
+
+      print('📱 Sending request to: $baseUrl/upload/web');
       var response = await request.send();
 
       if (response.statusCode == 200 || response.statusCode == 201) {
@@ -382,6 +401,8 @@ class ApiService {
   Future<String> _uploadImageMobileFromBytes(List<int> bytes) async {
     try {
       print('📱 Mobile upload (bytes) starting, ${bytes.length} bytes');
+      print('📱 Upload URL: $baseUrl/upload/web');
+
       var request =
           http.MultipartRequest('POST', Uri.parse('$baseUrl/upload/web'));
 
@@ -389,16 +410,36 @@ class ApiService {
       final headers = await _getHeaders();
       if (headers['Authorization'] != null) {
         request.headers['Authorization'] = headers['Authorization']!;
+        print('📱 Authorization header added');
       }
 
       final filename = 'upload-${DateTime.now().millisecondsSinceEpoch}.jpg';
+      print(
+          '📱 Creating multipart file: $filename with contentType image/jpeg');
       request.files.add(
-          http.MultipartFile.fromBytes('image', bytes, filename: filename));
+        http.MultipartFile.fromBytes(
+          'image',
+          bytes,
+          filename: filename,
+          contentType: MediaType('image', 'jpeg'),
+        ),
+      );
+      print('📱 File added to request: ${request.files.length} files');
 
-      var response = await request.send();
+      print('📱 Sending request...');
+      var response = await request.send().timeout(
+        const Duration(seconds: 60),
+        onTimeout: () {
+          print('❌ Upload timeout after 60 seconds');
+          throw Exception('Upload timeout');
+        },
+      );
+
+      print('📱 Response received with status: ${response.statusCode}');
 
       if (response.statusCode == 200 || response.statusCode == 201) {
         final responseData = await response.stream.bytesToString();
+        print('📱 Response data: $responseData');
         final data = json.decode(responseData);
 
         if (data['data'] != null && data['data']['url'] != null) {
@@ -411,6 +452,7 @@ class ApiService {
           print('✅ Mobile upload successful: ${data['url']}');
           return data['url'];
         } else {
+          print('⚠️ Response data structure: $data');
           throw Exception('No URL in upload response');
         }
       } else {
@@ -426,7 +468,8 @@ class ApiService {
       }
     } catch (e) {
       print('❌ Mobile upload (bytes) error: $e');
-      throw Exception('Mobile upload error: $e');
+      print('❌ Error type: ${e.runtimeType}');
+      rethrow;
     }
   }
 

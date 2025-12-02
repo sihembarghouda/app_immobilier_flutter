@@ -20,6 +20,44 @@ class PropertyDetailScreen extends StatefulWidget {
 
 class _PropertyDetailScreenState extends State<PropertyDetailScreen> {
   int _currentImageIndex = 0;
+  bool _isLoading = true;
+  String? _errorMessage;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadPropertyDetails();
+  }
+
+  Future<void> _loadPropertyDetails() async {
+    setState(() {
+      _isLoading = true;
+      _errorMessage = null;
+    });
+
+    try {
+      final propertyProvider =
+          Provider.of<PropertyProvider>(context, listen: false);
+
+      // Check if property is already in cache
+      final cachedProperty =
+          propertyProvider.getPropertyById(widget.propertyId);
+
+      if (cachedProperty == null) {
+        // Property not in cache, fetch from API
+        await propertyProvider.fetchPropertyDetails(widget.propertyId);
+      }
+
+      setState(() {
+        _isLoading = false;
+      });
+    } catch (e) {
+      setState(() {
+        _isLoading = false;
+        _errorMessage = 'Erreur lors du chargement: $e';
+      });
+    }
+  }
 
   String _formatPrice(double price) {
     final formatter = NumberFormat('#,##0', 'fr_FR');
@@ -79,6 +117,34 @@ class _PropertyDetailScreenState extends State<PropertyDetailScreen> {
 
   @override
   Widget build(BuildContext context) {
+    if (_isLoading) {
+      return Scaffold(
+        appBar: AppBar(title: const Text('Détails')),
+        body: const Center(child: CircularProgressIndicator()),
+      );
+    }
+
+    if (_errorMessage != null) {
+      return Scaffold(
+        appBar: AppBar(title: const Text('Erreur')),
+        body: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Icon(Icons.error_outline, size: 64, color: Colors.red),
+              const SizedBox(height: 16),
+              Text(_errorMessage!, textAlign: TextAlign.center),
+              const SizedBox(height: 16),
+              ElevatedButton(
+                onPressed: _loadPropertyDetails,
+                child: const Text('Réessayer'),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
     final propertyProvider = Provider.of<PropertyProvider>(context);
     final property = propertyProvider.getPropertyById(widget.propertyId);
 

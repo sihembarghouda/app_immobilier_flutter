@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../../providers/property_provider.dart';
 import '../../providers/auth_provider.dart';
 import '../property/property_detail_screen.dart';
+import '../property/add_property_screen.dart';
 
 class MyPropertiesScreen extends StatefulWidget {
   const MyPropertiesScreen({Key? key}) : super(key: key);
@@ -249,11 +250,9 @@ class _MyPropertiesScreenState extends State<MyPropertiesScreen> {
   }
 
   void _editProperty(property) {
-    // TODO: Navigate to edit screen
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Fonctionnalité d\'édition en cours de développement'),
-        backgroundColor: Colors.orange,
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => AddPropertyScreen(property: property),
       ),
     );
   }

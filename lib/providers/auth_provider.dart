@@ -93,14 +93,27 @@ class AuthProvider with ChangeNotifier {
 
       final response = await _apiService!.login(email, password);
 
+      print('🔍 DEBUG - Full response: $response');
+      print('🔍 DEBUG - response[data]: ${response['data']}');
+      print('🔍 DEBUG - response[data][user]: ${response['data']?['user']}');
+
       if (response['success'] == true && response['data'] != null) {
-        _user = User.fromJson(response['data']['user']);
+        final userData = response['data']['user'];
+        print('🔍 DEBUG - userData before User.fromJson: $userData');
+        print('🔍 DEBUG - userData[role]: ${userData['role']}');
+
+        _user = User.fromJson(userData);
+
+        print(
+            '🔍 DEBUG - _user after fromJson: role=${_user!.role}, name=${_user!.name}');
 
         // Le token est déjà sauvegardé par l'ApiService
         // Sauvegarder les données utilisateur
         await _storageService!.setJson(AppConfig.userKey, _user!.toJson());
 
-        print('✅ Login successful: ${_user!.name}');
+        print('🔍 DEBUG - Saved to cache: ${_user!.toJson()}');
+
+        print('✅ Login successful: ${_user!.name} with role: ${_user!.role}');
 
         _isLoading = false;
         notifyListeners();
@@ -179,13 +192,23 @@ class AuthProvider with ChangeNotifier {
 
     try {
       print('✏️  Updating profile...');
+      if (role != null) {
+        print('📝 Changing role to: $role');
+      }
 
       final updatedUser = await _apiService!
           .updateProfile(name, phone, avatar: avatar, role: role);
+
+      print('📦 Received updated user from server:');
+      print('   - ID: ${updatedUser.id}');
+      print('   - Name: ${updatedUser.name}');
+      print('   - Role: ${updatedUser.role}');
+
       _user = updatedUser;
 
       // Sauvegarder dans le cache
       await _storageService!.setJson(AppConfig.userKey, _user!.toJson());
+      print('💾 Saved to cache');
 
       print('✅ Profile updated successfully');
 

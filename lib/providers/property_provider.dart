@@ -87,6 +87,28 @@ class PropertyProvider with ChangeNotifier {
     }
   }
 
+  // Fetch property details from API
+  Future<void> fetchPropertyDetails(String id) async {
+    try {
+      final api = await _ensureApiService();
+      final property = await api.getPropertyById(id);
+
+      // Update or add property to the list
+      final index = _properties.indexWhere((p) => p.id == id);
+      if (index != -1) {
+        _properties[index] = property;
+      } else {
+        _properties.add(property);
+      }
+
+      notifyListeners();
+    } catch (e) {
+      _error = e.toString();
+      notifyListeners();
+      rethrow;
+    }
+  }
+
   // Toggle favorite
   Future<void> toggleFavorite(String propertyId) async {
     try {
@@ -122,11 +144,16 @@ class PropertyProvider with ChangeNotifier {
   // Add new property
   Future<bool> addProperty(Property property) async {
     try {
+      print('📋 PropertyProvider.addProperty called');
+      print('📋 Property images: ${property.images}');
+      print('📋 Number of images: ${property.images.length}');
+
       final api = await _ensureApiService();
       await api.createProperty(property);
       await fetchProperties(); // Refresh the list
       return true;
     } catch (e) {
+      print('❌ PropertyProvider.addProperty error: $e');
       _error = e.toString();
       return false;
     }

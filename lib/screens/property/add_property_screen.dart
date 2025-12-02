@@ -11,7 +11,9 @@ import '../../screens/services/api_service.dart';
 import '../../models/property.dart';
 
 class AddPropertyScreen extends StatefulWidget {
-  const AddPropertyScreen({super.key});
+  final Property? property; // Property to edit (null for adding new)
+
+  const AddPropertyScreen({super.key, this.property});
 
   @override
   State<AddPropertyScreen> createState() => _AddPropertyScreenState();
@@ -37,9 +39,29 @@ class _AddPropertyScreenState extends State<AddPropertyScreen> {
   double? _latitude;
   double? _longitude;
 
+  bool get isEditing => widget.property != null;
+
   @override
   void initState() {
     super.initState();
+
+    // If editing, populate fields with existing data
+    if (isEditing) {
+      _titleController.text = widget.property!.title;
+      _descriptionController.text = widget.property!.description;
+      _priceController.text = widget.property!.price.toString();
+      _surfaceController.text = widget.property!.surface.toString();
+      _roomsController.text = widget.property!.rooms?.toString() ?? '';
+      _bedroomsController.text = widget.property!.bedrooms?.toString() ?? '';
+      _bathroomsController.text = widget.property!.bathrooms?.toString() ?? '';
+      _addressController.text = widget.property!.address ?? '';
+      _cityController.text = widget.property!.city ?? '';
+      _selectedType = widget.property!.type;
+      _selectedTransactionType = widget.property!.transactionType;
+      _latitude = widget.property!.latitude;
+      _longitude = widget.property!.longitude;
+    }
+
     _getCurrentLocation();
 
     // Sync token from auth provider to api service
@@ -112,6 +134,7 @@ class _AddPropertyScreenState extends State<AddPropertyScreen> {
           for (var i = 0; i < _selectedImages.length; i++) {
             try {
               final image = _selectedImages[i];
+              print('📸 Processing image ${i + 1}: ${image.path}');
               String imageUrl;
 
               if (kIsWeb) {
@@ -121,13 +144,19 @@ class _AddPropertyScreenState extends State<AddPropertyScreen> {
                     'data:image/jpeg;base64,${base64Encode(bytes)}';
                 imageUrl = await _apiService.uploadImage(base64Image);
               } else {
-                // For mobile, read bytes and upload bytes to handle content:// URIs
-                final bytes = await image.readAsBytes();
-                imageUrl = await _apiService.uploadImage(bytes);
+                // For mobile, use the file path directly
+                print('📸 Using image path: ${image.path}');
+                imageUrl = await _apiService.uploadImage(image.path);
+                print('📸 Upload returned URL: $imageUrl');
               }
 
-              imageUrls.add(imageUrl);
-              print('✅ Image ${i + 1}/${_selectedImages.length} uploaded');
+              if (imageUrl.isNotEmpty) {
+                imageUrls.add(imageUrl);
+                print(
+                    '✅ Image ${i + 1}/${_selectedImages.length} uploaded successfully: $imageUrl');
+              } else {
+                print('⚠️ Image ${i + 1} upload returned empty URL');
+              }
             } catch (e) {
               print('❌ Failed to upload image ${i + 1}: $e');
               // Continue with other images
@@ -135,13 +164,18 @@ class _AddPropertyScreenState extends State<AddPropertyScreen> {
           }
         }
 
+        print('📋 Total images uploaded: ${imageUrls.length}');
+        print('📋 Image URLs: $imageUrls');
+
         // Use empty array if no images uploaded (will show fallback in UI)
-        if (imageUrls.isEmpty) {
+        if (imageUrls.isEmpty && !isEditing) {
           imageUrls.add(''); // Empty string triggers errorWidget
         }
 
         final property = Property(
-          id: DateTime.now().millisecondsSinceEpoch.toString(),
+          id: isEditing
+              ? widget.property!.id
+              : DateTime.now().millisecondsSinceEpoch.toString(),
           title: _titleController.text,
           description: _descriptionController.text,
           type: _selectedType,
@@ -155,32 +189,40 @@ class _AddPropertyScreenState extends State<AddPropertyScreen> {
           city: _cityController.text,
           latitude: _latitude!,
           longitude: _longitude!,
-          images: imageUrls,
+          images: imageUrls.isNotEmpty
+              ? imageUrls
+              : (isEditing ? widget.property!.images : ['']),
           ownerId: authProvider.user!.id.toString(),
           ownerName: authProvider.user!.name,
           ownerPhone: authProvider.user!.phone ?? '',
-          createdAt: DateTime.now(),
+          createdAt: isEditing ? widget.property!.createdAt : DateTime.now(),
         );
 
-        final success =
-            await Provider.of<PropertyProvider>(context, listen: false)
-                .addProperty(property);
+        final propertyProvider =
+            Provider.of<PropertyProvider>(context, listen: false);
+        final success = isEditing
+            ? await propertyProvider.updateProperty(property.id, property)
+            : await propertyProvider.addProperty(property);
 
         if (mounted) {
           setState(() => _isLoading = false);
 
           if (success) {
             ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('Annonce publiée avec succès!'),
+              SnackBar(
+                content: Text(isEditing
+                    ? 'Annonce modifiée avec succès!'
+                    : 'Annonce publiée avec succès!'),
                 backgroundColor: Colors.green,
               ),
             );
             Navigator.of(context).pop();
           } else {
             ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('Erreur lors de la publication'),
+              SnackBar(
+                content: Text(isEditing
+                    ? 'Erreur lors de la modification'
+                    : 'Erreur lors de la publication'),
                 backgroundColor: Colors.red,
               ),
             );
@@ -204,7 +246,9 @@ class _AddPropertyScreenState extends State<AddPropertyScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Publier une annonce')),
+      appBar: AppBar(
+        title: Text(isEditing ? 'Modifier l\'annonce' : 'Publier une annonce'),
+      ),
       body: Form(
         key: _formKey,
         child: ListView(
@@ -369,7 +413,9 @@ class _AddPropertyScreenState extends State<AddPropertyScreen> {
               ),
               child: _isLoading
                   ? const CircularProgressIndicator()
-                  : const Text('Publier l\'annonce'),
+                  : Text(isEditing
+                      ? 'Enregistrer les modifications'
+                      : 'Publier l\'annonce'),
             ),
           ],
         ),

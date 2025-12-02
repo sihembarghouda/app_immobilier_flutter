@@ -978,21 +978,39 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   if (role['value'] != currentRole) {
                     Navigator.pop(dialogContext);
 
-                    // Mise à jour du rôle
+                    // Show loading indicator
+                    if (mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('Mise à jour du rôle...'),
+                          duration: Duration(seconds: 2),
+                        ),
+                      );
+                    }
+
+                    // Mise à jour du rôle (convert to English for API)
+                    final roleValue = UserRole.normalizeEn(role['value']!);
                     final success = await authProvider.updateProfile(
                       authProvider.user!.name,
                       authProvider.user!.phone ?? '',
-                      role: role['value'],
+                      role: roleValue,
                     );
 
                     if (success && mounted) {
+                      ScaffoldMessenger.of(context).clearSnackBars();
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(
-                          content: Text('Rôle changé en ${role['label']}'),
+                          content: Text(
+                              'Rôle changé en ${role['label']} avec succès!'),
                           backgroundColor: Colors.green,
+                          duration: const Duration(seconds: 2),
                         ),
                       );
+
+                      // Fermer le dialogue
+                      Navigator.of(context).pop();
                     } else if (mounted) {
+                      ScaffoldMessenger.of(context).clearSnackBars();
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(
                           content: Text(authProvider.error ??

@@ -33,12 +33,8 @@ class AppConfig {
           ? 'http://$_lanIp:$_backendPort/api'
           : 'http://localhost:$_backendPort/api';
     } else if (Platform.isAndroid) {
-      return const bool.fromEnvironment(
-        'CONFIG_ANDROID_REAL_DEVICE',
-        defaultValue: false,
-      )
-          ? 'http://$_lanIp:$_backendPort/api'
-          : 'http://192.168.1.14:$_backendPort/api';
+      // Pour Android, utiliser l'IP LAN en développement
+      return 'http://$_lanIp:$_backendPort/api';
     } else if (Platform.isIOS) {
       return const bool.fromEnvironment(
         'CONFIG_IOS_REAL_DEVICE',
