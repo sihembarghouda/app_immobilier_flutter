@@ -1,10 +1,13 @@
 // widgets/property_card.dart
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:provider/provider.dart';
 import '../../models/property.dart';
 import '../../core/config/app_config.dart';
 import 'package:intl/intl.dart';
 import '../../../widgets/role_protected_widget.dart';
+import '../../providers/auth_provider.dart';
+import '../../utils/role_helper.dart';
 
 class PropertyCard extends StatelessWidget {
   final Property property;
@@ -51,6 +54,11 @@ class PropertyCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final authProvider = Provider.of<AuthProvider>(context);
+    final userRole = authProvider.user?.role;
+    // Only buyers can add to favorites
+    final canAddToFavorites = UserRole.hasRole(userRole, UserRole.acheteur);
+
     return Card(
       margin: const EdgeInsets.only(bottom: 16),
       clipBehavior: Clip.antiAlias,
@@ -119,18 +127,19 @@ class PropertyCard extends StatelessWidget {
                     ),
                   ),
                 ),
-                // Favorite Button
-                Positioned(
-                  top: 12,
-                  right: 12,
-                  child: CircleAvatar(
-                    backgroundColor: Colors.white,
-                    child: FavoriteButton(
-                      isFavorite: property.isFavorite,
-                      onPressed: onFavorite,
+                // Favorite Button - Only for buyers
+                if (canAddToFavorites)
+                  Positioned(
+                    top: 12,
+                    right: 12,
+                    child: CircleAvatar(
+                      backgroundColor: Colors.white,
+                      child: FavoriteButton(
+                        isFavorite: property.isFavorite,
+                        onPressed: onFavorite,
+                      ),
                     ),
                   ),
-                ),
               ],
             ),
             // Content

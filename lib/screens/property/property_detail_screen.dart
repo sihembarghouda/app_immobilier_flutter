@@ -22,11 +22,19 @@ class _PropertyDetailScreenState extends State<PropertyDetailScreen> {
   int _currentImageIndex = 0;
   bool _isLoading = true;
   String? _errorMessage;
+  late PageController _pageController;
 
   @override
   void initState() {
     super.initState();
+    _pageController = PageController();
     _loadPropertyDetails();
+  }
+
+  @override
+  void dispose() {
+    _pageController.dispose();
+    super.dispose();
   }
 
   Future<void> _loadPropertyDetails() async {
@@ -169,6 +177,7 @@ class _PropertyDetailScreenState extends State<PropertyDetailScreen> {
                   // Image Carousel
                   if (property.images.isNotEmpty)
                     PageView.builder(
+                      controller: _pageController,
                       itemCount: property.images.length,
                       onPageChanged: (index) {
                         setState(() {
@@ -197,6 +206,84 @@ class _PropertyDetailScreenState extends State<PropertyDetailScreen> {
                       color: Colors.grey[300],
                       child: const Icon(Icons.image, size: 64),
                     ),
+                  // Navigation Arrows
+                  if (property.images.length > 1) ...[
+                    // Previous button
+                    Positioned(
+                      left: 16,
+                      top: 0,
+                      bottom: 0,
+                      child: Center(
+                        child: Container(
+                          decoration: BoxDecoration(
+                            color: Colors.black.withOpacity(0.5),
+                            shape: BoxShape.circle,
+                          ),
+                          child: IconButton(
+                            icon: const Icon(Icons.arrow_back_ios_new,
+                                color: Colors.white),
+                            onPressed: _currentImageIndex > 0
+                                ? () {
+                                    _pageController.previousPage(
+                                      duration:
+                                          const Duration(milliseconds: 300),
+                                      curve: Curves.easeInOut,
+                                    );
+                                  }
+                                : null,
+                          ),
+                        ),
+                      ),
+                    ),
+                    // Next button
+                    Positioned(
+                      right: 16,
+                      top: 0,
+                      bottom: 0,
+                      child: Center(
+                        child: Container(
+                          decoration: BoxDecoration(
+                            color: Colors.black.withOpacity(0.5),
+                            shape: BoxShape.circle,
+                          ),
+                          child: IconButton(
+                            icon: const Icon(Icons.arrow_forward_ios,
+                                color: Colors.white),
+                            onPressed:
+                                _currentImageIndex < property.images.length - 1
+                                    ? () {
+                                        _pageController.nextPage(
+                                          duration:
+                                              const Duration(milliseconds: 300),
+                                          curve: Curves.easeInOut,
+                                        );
+                                      }
+                                    : null,
+                          ),
+                        ),
+                      ),
+                    ),
+                    // Image counter
+                    Positioned(
+                      top: 16,
+                      right: 16,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 12, vertical: 6),
+                        decoration: BoxDecoration(
+                          color: Colors.black.withOpacity(0.6),
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: Text(
+                          '${_currentImageIndex + 1}/${property.images.length}',
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
                   // Gradient Overlay
                   Positioned(
                     bottom: 0,
