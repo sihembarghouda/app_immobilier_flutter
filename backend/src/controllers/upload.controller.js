@@ -14,11 +14,22 @@ exports.uploadWeb = async (req, res) => {
       });
     }
 
+    console.log('📤 Starting Cloudinary upload...');
+    console.log('File path:', req.file.path);
+    console.log('File exists:', fs.existsSync(req.file.path));
+    console.log('Cloudinary config:', {
+      cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+      api_key: process.env.CLOUDINARY_API_KEY,
+      api_secret: process.env.CLOUDINARY_API_SECRET ? '***' : 'NOT SET'
+    });
+
     // Upload to Cloudinary
     const cloudinaryUrl = await cloudinaryService.uploadImage(
       req.file.path,
       'immobilier/properties'
     );
+
+    console.log('✅ Cloudinary upload successful:', cloudinaryUrl);
 
     // Delete local file after upload
     try {
@@ -36,7 +47,9 @@ exports.uploadWeb = async (req, res) => {
       }
     });
   } catch (error) {
-    console.error('Error uploading web image:', error);
+    console.error('❌ Error uploading web image:', error);
+    console.error('Error details:', error.message);
+    console.error('Error stack:', error.stack);
     
     // Delete uploaded file on error
     if (req.file) {
@@ -47,7 +60,8 @@ exports.uploadWeb = async (req, res) => {
     
     res.status(500).json({ 
       success: false,
-      message: 'Erreur lors du téléchargement de l\'image' 
+      message: 'Erreur lors du téléchargement de l\'image',
+      error: error.message
     });
   }
 };
